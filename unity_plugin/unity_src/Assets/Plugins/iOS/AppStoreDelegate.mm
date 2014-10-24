@@ -163,8 +163,25 @@ NSMutableArray* m_skuMap;
 
 - (void)startPurchase:(NSString*)sku
 {
-    SKMutablePayment *payment = [SKMutablePayment paymentWithProductIdentifier:sku];
+    SKProduct* product = nil;
+    for (NSArray* mapEntry in m_skuMap) {
+        if ([mapEntry count] >= 3) {
+            SKProduct* currentProduct = [mapEntry objectAtIndex: 2];
+            if (currentProduct != nil &&
+                [currentProduct productIdentifier] == sku) {
+                product = currentProduct;
+                break;
+            }
+        }
+    }
+    
+    if (product != nil) {
+        SKPayment* payment = [SKPayment paymentWithProduct: product];
     [[SKPaymentQueue defaultQueue] addPayment:payment];
+}
+    else {
+        NSLog(@"Couldn't find a product to purchase. Will be skipped.");
+    }
 }
 
 - (void)queryInventory
