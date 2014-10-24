@@ -177,8 +177,8 @@ NSMutableArray* m_skuMap;
     
     if (product != nil) {
         SKPayment* payment = [SKPayment paymentWithProduct: product];
-    [[SKPaymentQueue defaultQueue] addPayment:payment];
-}
+        [[SKPaymentQueue defaultQueue] addPayment:payment];
+    }
     else {
         NSLog(@"Couldn't find a product to purchase. Will be skipped.");
     }
@@ -260,7 +260,36 @@ NSMutableArray* m_skuMap;
                 
 			case SKPaymentTransactionStatePurchased:
                 [self storePurchase:transaction.payment.productIdentifier];
-                UnitySendMessage(EventHandler, "OnPurchaseSucceeded", MakeStringCopy([transaction.payment.productIdentifier UTF8String]));
+
+                // As of iOS7 transaction.transactionReceipt is deprecated.
+                // https://developer.apple.com/LIBRARY/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html#//apple_ref/doc/uid/TP40010573-CH104-SW1
+                NSData* receipt = nil;
+                if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) {
+                    receipt = [transaction transactionReceipt];
+                } else {
+                    NSBundle* mainBundle = [NSBundle mainBundle];
+                    NSURL* appStoreReceiptURL = [mainBundle appStoreReceiptURL];
+                    receipt = [NSData dataWithContentsOfURL:appStoreReceiptURL];
+                }
+                
+                NSDictionary* purchaseSuccessMessage = [NSDictionary dictionaryWithObjectsAndKeys:
+                    @"product", @"itemType",
+                    @"", @"orderId",
+                    @"", @"packageName",
+                    MakeStringCopy([transaction.payment.productIdentifier UTF8String]), @"sku",
+                    [NSNumber numberWithLong:0], @"purchaseTime",
+                    [NSNumber numberWithLong:0], @"purchaseState",
+                    @"", @"developerPayload",
+                    MakeStringCopy([receipt.base64Encoding UTF8String]), @"token",
+                    @"", @"originalJson",
+                    @"", @"signature",
+                    @"", @"appstoreName",
+                    nil];
+                
+                NSError* error = nil;
+                NSData* jsonData = [NSJSONSerialization dataWithJSONObject:purchaseSuccessMessage options:kNilOptions error:&error];
+                NSString* message = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+                UnitySendMessage(EventHandler, "OnPurchaseSucceeded", MakeStringCopy([message UTF8String]));
                 [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
                 break;
 		}
