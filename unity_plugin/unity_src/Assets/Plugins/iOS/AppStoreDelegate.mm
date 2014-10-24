@@ -146,7 +146,7 @@ NSMutableArray* m_skuMap;
                                     @"", @"json",
                                     nil];
         
-        NSArray* entry = [NSArray arrayWithObjects:skProduct.productIdentifier, skuDetails, nil];
+        NSArray* entry = [NSArray arrayWithObjects:skProduct.productIdentifier, skuDetails, skProduct, nil];
         [m_skuMap addObject:entry];
     }
     
