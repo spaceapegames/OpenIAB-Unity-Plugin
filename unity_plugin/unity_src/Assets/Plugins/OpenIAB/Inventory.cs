@@ -32,6 +32,7 @@ namespace OnePF
 
         public Inventory(string json)
         {
+						Debug.Log ("Create inventory from json: " + json);
             var j = new JSON(json);
             foreach (var entry in (List<object>) j.fields["purchaseMap"])
             {
@@ -53,7 +54,7 @@ namespace OnePF
 				string key = OpenIAB_iOS.StoreSku2Sku(pair[0].ToString());
                 SkuDetails value = new SkuDetails((JSON) pair[1]);
 #else
-                string key = pair[0].ToString();
+								string key = pair[0].ToString();
                 SkuDetails value = new SkuDetails(pair[1].ToString());
 #endif
                 _skuMap.Add(key, value);
@@ -89,7 +90,7 @@ namespace OnePF
          */
         public SkuDetails GetSkuDetails(string sku)
         {
-            if (!_skuMap.ContainsKey(sku))
+			if (string.IsNullOrEmpty(sku) || !_skuMap.ContainsKey(sku))
             {
                 return null;
             }
@@ -101,6 +102,7 @@ namespace OnePF
          */
         public Purchase GetPurchase(string sku)
         {
+						Debug.Log ("Get purchase sku: " + sku);
             if (!_purchaseMap.ContainsKey(sku))
             {
                 return null;
@@ -134,6 +136,7 @@ namespace OnePF
          */
         public void ErasePurchase(string sku)
         {
+						Debug.Log ("Erase purchase sku: " + sku);
             if (_purchaseMap.ContainsKey(sku)) _purchaseMap.Remove(sku);
         }
 
@@ -181,7 +184,10 @@ namespace OnePF
 
         public void AddPurchase(Purchase p)
         {
-            _purchaseMap.Add(p.Sku, p);
+						Debug.Log ("Add purchase sku: " + p.Sku);
+						if (_purchaseMap != null && !_purchaseMap.ContainsKey (p.Sku)) {
+								_purchaseMap.Add (p.Sku, p);
+						}
         }
     }
 }

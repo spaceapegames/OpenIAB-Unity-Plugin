@@ -32,4 +32,8 @@
  */
 - (void)restorePurchases;
 
+
++ (bool)hasInstance;
+
+- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions;
 @end

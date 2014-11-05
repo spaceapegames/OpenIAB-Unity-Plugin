@@ -138,6 +138,7 @@ namespace OnePF
 
         public void consumeProduct(Purchase purchase)
         {
+						Debug.Log ("Consume ios");
             if (!IsDevice())
             {
                 // Fake consume in editor mode
@@ -145,14 +146,15 @@ namespace OnePF
                 return;
             }
 
-            var storeSku = OpenIAB_iOS.Sku2StoreSku(purchase.Sku);
-            if (Inventory_hasPurchase(storeSku))
+			if (Inventory_hasPurchase(purchase.Sku))
             {
+				Debug.Log ("Consume ios do remove");
                 OpenIAB.EventManager.SendMessage("OnConsumePurchaseSucceeded", purchase.Serialize());
-                Inventory_removePurchase(storeSku);
+				Inventory_removePurchase(purchase.Sku);
             }
             else
             {
+								Debug.Log ("Consume ios not found");
                 OpenIAB.EventManager.SendMessage("OnConsumePurchaseFailed", "Purchase not found");
             }
         }
