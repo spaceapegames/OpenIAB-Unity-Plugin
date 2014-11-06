@@ -89,7 +89,7 @@ namespace OnePF
          */
         public SkuDetails GetSkuDetails(string sku)
         {
-            if (!_skuMap.ContainsKey(sku))
+			if (string.IsNullOrEmpty(sku) || !_skuMap.ContainsKey(sku))
             {
                 return null;
             }
@@ -181,7 +181,9 @@ namespace OnePF
 
         public void AddPurchase(Purchase p)
         {
-            _purchaseMap.Add(p.Sku, p);
+			if (_purchaseMap != null && !_purchaseMap.ContainsKey(p.Sku)) {
+				_purchaseMap.Add (p.Sku, p);
+			}
         }
     }
 }
