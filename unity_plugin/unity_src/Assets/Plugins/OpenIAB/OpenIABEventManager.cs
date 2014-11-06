@@ -214,13 +214,13 @@ public class OpenIABEventManager : MonoBehaviour
             queryInventoryFailedEvent(error);
     }
 
-    private void OnPurchaseSucceeded(string sku)
-    {
-        if (purchaseSucceededEvent != null)
-        {
-            purchaseSucceededEvent(Purchase.CreateFromSku(OpenIAB_iOS.StoreSku2Sku(sku)));
-        }
-    }
+	private void OnPurchaseSucceeded(string json)
+	    {
+	        if (purchaseSucceededEvent != null)
+	        {
+	            purchaseSucceededEvent(new Purchase(json));
+	        }
+	    }
 
     private void OnPurchaseFailed(string error)
     {

@@ -145,11 +145,10 @@ namespace OnePF
                 return;
             }
 
-            var storeSku = OpenIAB_iOS.Sku2StoreSku(purchase.Sku);
-            if (Inventory_hasPurchase(storeSku))
+			if (Inventory_hasPurchase(purchase.Sku))
             {
                 OpenIAB.EventManager.SendMessage("OnConsumePurchaseSucceeded", purchase.Serialize());
-                Inventory_removePurchase(storeSku);
+				Inventory_removePurchase(purchase.Sku);
             }
             else
             {

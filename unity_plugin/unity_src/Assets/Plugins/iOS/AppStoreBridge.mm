@@ -101,5 +101,7 @@ extern "C"
         {
             NSLog(@"Couldn't access standardUserDefaults. Purchase wasn't removed.");
         }
+        
+        [[AppStoreDelegate instance] consumePurchase: ToString(sku)];
     }
 }
