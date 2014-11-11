@@ -282,8 +282,17 @@ NSMutableArray* transactions;
 			case SKPaymentTransactionStateFailed:
                 if (transaction.error.code == SKErrorPaymentCancelled)
                     UnitySendMessage(EventHandler, "OnPurchaseFailed", MakeStringCopy("Transaction cancelled"));
-                else
-                    UnitySendMessage(EventHandler, "OnPurchaseFailed", MakeStringCopy([[transaction.error localizedDescription] UTF8String]));
+                else {
+                    NSError* error = transaction.error;
+                    const char* errorStr = NULL;
+                    if (error != nil && [error localizedDescription] != nil) {
+                        errorStr = [[error localizedDescription] UTF8String];
+                    }
+                    else {
+                        errorStr = "Unknown error";
+                    }
+                    UnitySendMessage(EventHandler, "OnPurchaseFailed", MakeStringCopy(errorStr));
+                }
                 [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 				break;
                 
