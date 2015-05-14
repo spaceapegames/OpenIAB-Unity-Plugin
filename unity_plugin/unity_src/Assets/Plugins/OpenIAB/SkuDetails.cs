@@ -31,6 +31,7 @@ namespace OnePF
         public string Description { get; private set; }
         public string Json { get; private set; }
         public string CurrencyCode { get; private set; }
+		public string StoreCountry { get; private set; }
         public string PriceValue { get; private set; }
 
         // Used for Android
@@ -45,6 +46,7 @@ namespace OnePF
             Description = json.ToString("description");
             Json = json.ToString("json");
             CurrencyCode = json.ToString("currencyCode");
+			StoreCountry = json.ToString("storeCountry");
             PriceValue = json.ToString("priceValue");
             ParseFromJson();
         }
@@ -59,8 +61,9 @@ namespace OnePF
             Description = json.ToString("description");
             Json = json.ToString("json");
 			CurrencyCode = json.ToString("currencyCode");
-			PriceValue = json.ToString("priceValue");
+			StoreCountry = json.ToString("storeCountry");
 
+			PriceValue = json.ToString("priceValue");
             Sku = OpenIAB_iOS.StoreSku2Sku(Sku);
         }
 #endif

@@ -19,7 +19,7 @@
 /**
  * Unity to NS String conversion
  * @param c_string original C string
- */ 
+ */
 NSString* ToString(const char* c_string)
 {
     return c_string == NULL ? [NSString stringWithUTF8String:""] : [NSString stringWithUTF8String:c_string];
@@ -88,7 +88,7 @@ extern "C"
     /**
      * Delete purchase information
      * @param sku product ID
-     */    
+     */
     void Inventory_removePurchase(const char* sku)
     {
         NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
@@ -103,5 +103,13 @@ extern "C"
         }
         
         [[AppStoreDelegate instance] consumePurchase: ToString(sku)];
+    }
+    
+    /**
+     * Call to refresh receipt
+     */
+    void Inventory_refreshReceipt()
+    {
+        [[AppStoreDelegate instance] refreshReceipt];
     }
 }

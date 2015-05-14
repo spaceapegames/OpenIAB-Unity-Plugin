@@ -27,13 +27,9 @@
 - (void)queryInventory;
 
 /**
- * This is required by AppStore. 
+ * This is required by AppStore.
  * Separate button for restoration should be added somewhere in the application
  */
 - (void)restorePurchases;
 
-
-+ (bool)hasInstance;
-
-- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions;
 @end
