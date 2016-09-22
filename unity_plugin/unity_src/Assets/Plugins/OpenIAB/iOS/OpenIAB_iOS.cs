@@ -18,7 +18,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Linq;
 
 namespace OnePF
 {
@@ -83,10 +82,7 @@ namespace OnePF
 
             // Pass identifiers to the StoreKit
             string[] identifiers = new string[_sku2storeSkuMappings.Count];
-            for (int i = 0; i < _sku2storeSkuMappings.Count; ++i)
-            {
-                identifiers[i] = _sku2storeSkuMappings.ElementAt(i).Value;
-            }
+			_sku2storeSkuMappings.Values.CopyTo(identifiers, 0);
 
             AppStore_requestProducts(identifiers, identifiers.Length);
         }

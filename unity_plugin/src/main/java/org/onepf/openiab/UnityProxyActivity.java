@@ -46,6 +46,7 @@ public class UnityProxyActivity extends Activity {
             }
         };
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_FINISH));
+        Log.d(UnityPlugin.TAG, "Registering broadcast receiver.");
 
         if (UnityPlugin.sendRequest) {
             UnityPlugin.sendRequest = false;
@@ -70,7 +71,14 @@ public class UnityProxyActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver);
+        if (broadcastReceiver != null) {
+            Log.d(UnityPlugin.TAG, "Unregistering broadcast receiver.");
+			unregisterReceiver(broadcastReceiver);
+            broadcastReceiver = null;
+        }
+        else {
+            Log.d(UnityPlugin.TAG, "Skipping unregistering broadcast receiver as it was null.");
+        }
     }
     
     @Override

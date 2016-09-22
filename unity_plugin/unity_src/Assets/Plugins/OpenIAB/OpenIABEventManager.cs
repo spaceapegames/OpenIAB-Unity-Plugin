@@ -190,7 +190,7 @@ public class OpenIABEventManager : MonoBehaviour
 
 	public static bool IsPurchaseErrorCodeCancel(int errorCode)
 	{
-		return false;
+		return errorCode == -1005; // Android cancel code
 	}
 #endif
 
@@ -363,5 +363,15 @@ public class OpenIABEventManager : MonoBehaviour
 		return false;
 	}
 
+	#endif
+	
+	#if !UNITY_WP8 && !UNITY_IOS && !UNITY_ANDROID && UNITY_EDITOR
+	
+	public static bool IsPurchaseErrorCodeCancel(int errorCode)
+	{
+		return false;
+	}
+	
 #endif
+	
 }

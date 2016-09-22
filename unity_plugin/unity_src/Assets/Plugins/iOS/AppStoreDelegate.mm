@@ -124,15 +124,21 @@ static AppStoreDelegate* _instance = nil;
 {
     self = [super init];
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+    NSLog(@"Payment transaction observer registered");
     return self;
 }
 
 - (void)dealloc
 {
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
+    NSLog(@"Payment transaction observer unregistered");
+    [m_skuMap release];
+    [m_skuMapSerializable release];
+    [m_skus release];
     m_skus = nil;
     m_skuMap = nil;
     m_skuMapSerializable = nil;
+    [super dealloc];
 }
 
 
@@ -165,6 +171,7 @@ static AppStoreDelegate* _instance = nil;
         
         NSLocale *priceLocale = skProduct.priceLocale;
         NSString *currencyCode = [priceLocale objectForKey:NSLocaleCurrencyCode];
+        NSString *storeCountry = [priceLocale objectForKey:NSLocaleCountryCode];
         NSNumber *productPrice = skProduct.price;
         
         // Setup sku details
@@ -175,6 +182,7 @@ static AppStoreDelegate* _instance = nil;
                                     formattedPrice, @"price",
                                     currencyCode, @"currencyCode",
                                     productPrice, @"priceValue",
+                                    (storeCountry == nil || [storeCountry length] == 0) ? @"" : storeCountry, @"storeCountry",
                                     ([skProduct.localizedTitle length] == 0) ? @"" : skProduct.localizedTitle, @"title",
                                     ([skProduct.localizedDescription length] == 0) ? @"" : skProduct.localizedDescription, @"description",
                                     @"", @"json",
@@ -269,9 +277,26 @@ static AppStoreDelegate* _instance = nil;
 
 - (void)restorePurchases
 {
+    NSLog(@"restore purchases.");
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
 }
 
+- (void)refreshReceipt
+{
+    NSLog(@"refreshReceipt.");
+    
+    SKReceiptRefreshRequest *request = [[SKReceiptRefreshRequest alloc] initWithReceiptProperties:nil];
+    request.delegate = self;
+    [request start];
+}
+
+- (void)requestDidFinish:(SKRequest *)request
+{
+    NSLog(@"refresh request finished");
+    if ([request isKindOfClass:[SKReceiptRefreshRequest class]]) {
+        NSLog(@"Got a new receipt...");
+    }
+}
 
 - (void)refreshReceipt
 {
@@ -295,12 +320,16 @@ static AppStoreDelegate* _instance = nil;
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads
 {
     // Required by store protocol
+    NSLog(@"update downloads.");
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
 {
+    NSLog(@"Payment queue transactions updated");
     for (SKPaymentTransaction *transaction in transactions)
     {
+        NSLog(@"Payment queue transaction updated %@",transaction);
+        
         switch (transaction.transactionState)
         {
 			case SKPaymentTransactionStateDeferred:
@@ -331,7 +360,8 @@ static AppStoreDelegate* _instance = nil;
 					NSString* errorMessage = [NSString stringWithFormat:@"%d|Transaction cancelled", transaction.error.code];
 					UnitySendMessage(EventHandler, "OnPurchaseFailed", ASMakeStringCopy([errorMessage UTF8String]));
 				}
-                else {
+                else
+				{
                     NSError* error = transaction.error;
                     const char* errorStr = NULL;
                     if (error != nil && [error localizedDescription] != nil) {
@@ -386,11 +416,13 @@ static AppStoreDelegate* _instance = nil;
 
 - (void)paymentQueue:(SKPaymentQueue*)queue restoreCompletedTransactionsFailedWithError:(NSError*)error
 {
+    NSLog(@"restoreCompletedTransactionsFailedWithError.");
     UnitySendMessage(EventHandler, "OnRestoreFailed", ASMakeStringCopy([[error localizedDescription] UTF8String]));
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue*)queue
 {
+    NSLog(@"paymentQueueRestoreCompletedTransactionsFinished.");
     [self paymentQueue:queue updatedTransactions:queue.transactions];
 }
 

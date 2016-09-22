@@ -32,6 +32,7 @@ namespace OnePF
 
         public Inventory(string json)
         {
+						Debug.Log ("Create inventory from json: " + json);
             var j = new JSON(json);
             foreach (var entry in (List<object>) j.fields["purchaseMap"])
             {
@@ -101,6 +102,7 @@ namespace OnePF
          */
         public Purchase GetPurchase(string sku)
         {
+						Debug.Log ("Get purchase sku: " + sku);
             if (!_purchaseMap.ContainsKey(sku))
             {
                 return null;
@@ -134,6 +136,7 @@ namespace OnePF
          */
         public void ErasePurchase(string sku)
         {
+						Debug.Log ("Erase purchase sku: " + sku);
             if (_purchaseMap.ContainsKey(sku)) _purchaseMap.Remove(sku);
         }
 
@@ -181,6 +184,7 @@ namespace OnePF
 
         public void AddPurchase(Purchase p)
         {
+			Debug.Log ("Add purchase sku: " + p.Sku);
 			if (_purchaseMap != null && !_purchaseMap.ContainsKey(p.Sku)) {
 				_purchaseMap.Add (p.Sku, p);
 			}
