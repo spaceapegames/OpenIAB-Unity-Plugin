@@ -44,9 +44,9 @@ extern "C"
      * Native 'startPurchase' wrapper
      * @param sku product ID
      */
-    void AppStore_startPurchase(const char* sku)
+    void AppStore_startPurchase(const char* sku, BOOL simulatesAskToBuyInSandbox)
     {
-        [[AppStoreDelegate instance] startPurchase:ToString(sku)];
+        [[AppStoreDelegate instance] startPurchase:ToString(sku) withSimulatesAskToBuyInSandbox: simulatesAskToBuyInSandbox];
     }
     
     /**

@@ -198,7 +198,7 @@ static AppStoreDelegate* _instance = nil;
 
 // Transactions
 
-- (void)startPurchase:(NSString*)sku
+- (void)startPurchase:(NSString*)sku withSimulatesAskToBuyInSandbox:(BOOL)simulatesAskToBuyInSandbox
 {
     SKProduct* product = nil;
     for (NSArray* mapEntry in m_skuMap) {
@@ -213,7 +213,8 @@ static AppStoreDelegate* _instance = nil;
     }
     
     if (product != nil) {
-        SKPayment* payment = [SKPayment paymentWithProduct: product];
+        SKMutablePayment* payment = [SKMutablePayment paymentWithProduct: product];
+		payment.simulatesAskToBuyInSandbox = simulatesAskToBuyInSandbox;
         [[SKPaymentQueue defaultQueue] addPayment:payment];
     }
     else {
@@ -302,6 +303,28 @@ static AppStoreDelegate* _instance = nil;
     {
         switch (transaction.transactionState)
         {
+			case SKPaymentTransactionStateDeferred:
+				{
+					NSDictionary* purchaseSuccessMessage = [NSDictionary dictionaryWithObjectsAndKeys:
+															@"product", @"itemType",
+															transaction.transactionIdentifier, @"orderId",
+															@"", @"packageName",
+															transaction.payment.productIdentifier, @"sku",
+															[NSNumber numberWithLong:0], @"purchaseTime",
+															[NSNumber numberWithLong:0], @"purchaseState",
+															@"", @"developerPayload",
+															@"", @"token",
+															@"", @"originalJson",
+															@"", @"signature",
+															@"", @"appstoreName",
+                                                        nil];
+
+					NSError* error = nil;
+					NSData* jsonData = [NSJSONSerialization dataWithJSONObject:purchaseSuccessMessage options:kNilOptions error:&error];
+					NSString* message = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+					UnitySendMessage(EventHandler, "OnPurchaseDeferred", ASMakeStringCopy([message UTF8String]));
+				}
+				break;
             case SKPaymentTransactionStateFailed:
                 if (transaction.error.code == SKErrorPaymentCancelled)
 				{

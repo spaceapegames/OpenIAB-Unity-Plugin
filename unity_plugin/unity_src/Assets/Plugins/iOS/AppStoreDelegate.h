@@ -21,7 +21,7 @@
  * Start async purchase process
  * @param product ID
  */
-- (void)startPurchase:(NSString*)sku;
+- (void)startPurchase:(NSString*)sku withSimulatesAskToBuyInSandbox:(BOOL)simulatesAskToBuyInSandbox;
 
 /**
  * Request purchase history

@@ -31,6 +31,7 @@ namespace OnePF
 #endif
     {
         public static readonly string STORE = "appstore"; /**< AppStore name constant */
+		private bool simulateAskToBuyInSandbox = false;
 
 #if UNITY_IOS
         #region NativeMethods
@@ -38,7 +39,7 @@ namespace OnePF
         private static extern void AppStore_requestProducts(string[] skus, int skusNumber);
 
         [DllImport("__Internal")]
-        private static extern void AppStore_startPurchase(string sku);
+        private static extern void AppStore_startPurchase(string sku, bool simulateAskToBuyInSandbox);
 
         [DllImport("__Internal")]
         private static extern void AppStore_restorePurchases();
@@ -72,6 +73,7 @@ namespace OnePF
         public void init(Options options)
         {
             if (!IsDevice()) return;
+			simulateAskToBuyInSandbox = options.simulateAskToBuyInSandbox;
             init(options.storeKeys);
         }
 
@@ -131,7 +133,7 @@ namespace OnePF
                 return;
             }
 
-            AppStore_startPurchase(storeSku);
+			AppStore_startPurchase(storeSku, simulateAskToBuyInSandbox);
         }
 
         public void purchaseSubscription(string sku, string developerPayload = "")

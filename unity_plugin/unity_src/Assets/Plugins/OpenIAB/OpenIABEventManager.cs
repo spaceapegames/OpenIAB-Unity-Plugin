@@ -48,7 +48,12 @@ public class OpenIABEventManager : MonoBehaviour
     /**
      * Successful purchase callback. Fired after purchase of a product or a subscription
      */ 
-    public static event Action<Purchase> purchaseSucceededEvent;
+	public static event Action<Purchase> purchaseSucceededEvent;
+
+	/**
+     * Deferred purchase callback. Fired after child has to ask parent to buy.
+     */ 
+	public static event Action<Purchase> purchaseDeferredEvent;
     
     /**
      * Failed purchase callback
@@ -220,12 +225,20 @@ public class OpenIABEventManager : MonoBehaviour
     }
 
 	private void OnPurchaseSucceeded(string json)
-	    {
-	        if (purchaseSucceededEvent != null)
-	        {
-	            purchaseSucceededEvent(new Purchase(json));
-	        }
-	    }
+    {
+        if (purchaseSucceededEvent != null)
+        {
+            purchaseSucceededEvent(new Purchase(json));
+        }
+    }
+
+	private void OnPurchaseDeferred(string json)
+	{
+		if (purchaseDeferredEvent != null)
+		{
+			purchaseDeferredEvent(new Purchase(json));
+		}
+	}
 
     private void OnPurchaseFailed(string error)
     {
