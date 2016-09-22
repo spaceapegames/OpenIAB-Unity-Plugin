@@ -104,4 +104,12 @@ extern "C"
         
         [[AppStoreDelegate instance] consumePurchase: ToString(sku)];
     }
+      
+    /**
+     * Call to refresh receipt
+     */
+    void Inventory_refreshReceipt()
+    {
+        [[AppStoreDelegate instance] refreshReceipt];
+    }    
 }

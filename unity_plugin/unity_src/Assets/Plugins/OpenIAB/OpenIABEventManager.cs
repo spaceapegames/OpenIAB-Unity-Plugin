@@ -182,6 +182,11 @@ public class OpenIABEventManager : MonoBehaviour
             restoreSucceededEvent();
         }
     }
+
+	public static bool IsPurchaseErrorCodeCancel(int errorCode)
+	{
+		return false;
+	}
 #endif
 
 #if UNITY_IOS
@@ -224,9 +229,27 @@ public class OpenIABEventManager : MonoBehaviour
 
     private void OnPurchaseFailed(string error)
     {
+		int errorCode = -1;
+		string errorMessage = "Unknown error";
+		
+		if (!string.IsNullOrEmpty(error)) 
+		{
+			string[] tokens = error.Split('|');
+			
+			if (tokens.Length >= 2) 
+			{
+				Int32.TryParse(tokens[0], out errorCode);
+				errorMessage = tokens[1];
+			} 
+			else 
+			{
+				errorMessage = error;
+			}
+		}
+
         if (purchaseFailedEvent != null)
         {
-            purchaseFailedEvent(-1, error);
+			purchaseFailedEvent(errorCode, errorMessage);
         }
     }
 
@@ -265,6 +288,12 @@ public class OpenIABEventManager : MonoBehaviour
             restoreSucceededEvent();
         }
     }
+
+	public static bool IsPurchaseErrorCodeCancel(int errorCode)
+	{
+		return errorCode == 2; // SKErrorPaymentCancelled = 2
+	}
+
 #endif
 
 #if UNITY_WP8
@@ -315,5 +344,11 @@ public class OpenIABEventManager : MonoBehaviour
         if (consumePurchaseFailedEvent != null)
             consumePurchaseFailedEvent(error);
     }
+
+	public static bool IsPurchaseErrorCodeCancel(int errorCode)
+	{
+		return false;
+	}
+
 #endif
 }

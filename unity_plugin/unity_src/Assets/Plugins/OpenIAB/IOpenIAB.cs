@@ -35,7 +35,7 @@ namespace OnePF
         void purchaseSubscription(string sku, string developerPayload = "");
         void consumeProduct(Purchase purchase);
         void restoreTransactions();
-
+		void refreshReceipt();
         bool isDebugLog();
         void enableDebugLogging(bool enabled);
         void enableDebugLogging(bool enabled, string tag);

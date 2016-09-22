@@ -51,6 +51,10 @@ namespace OnePF
 
         [DllImport("__Internal")]
         private static extern void Inventory_removePurchase(string sku);
+
+		[DllImport("__Internal")]
+		private static extern void Inventory_refreshReceipt();
+
         #endregion
 
         static Dictionary<string, string> _sku2storeSkuMappings = new Dictionary<string, string>();
@@ -160,6 +164,11 @@ namespace OnePF
         {
             AppStore_restorePurchases();
         }
+
+		public void refreshReceipt()
+		{
+			Inventory_refreshReceipt();
+		}
 
         public bool isDebugLog()
         {

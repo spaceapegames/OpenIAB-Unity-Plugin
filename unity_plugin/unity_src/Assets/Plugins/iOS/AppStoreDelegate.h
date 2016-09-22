@@ -9,6 +9,8 @@
  */
 + (AppStoreDelegate*)instance;
 
++ (bool)hasInstance;
+
 /**
  * Request sku listing from the AppStore
  * @param skus product IDs
@@ -31,5 +33,9 @@
  * Separate button for restoration should be added somewhere in the application
  */
 - (void)restorePurchases;
+
+- (void)consumePurchase:(NSString *)sku;
+
+- (void)refreshReceipt;
 
 @end

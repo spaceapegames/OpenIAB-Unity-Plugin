@@ -38,10 +38,14 @@ namespace OnePF
         {
 #if UNITY_ANDROID
 			_billing = new OpenIAB_Android();
+		#if !UNITY_EDITOR
             Debug.Log("********** Android OpenIAB plugin initialized **********");
+		#endif
 #elif UNITY_IOS
 			_billing = new OpenIAB_iOS();
+		#if !UNITY_EDITOR
             Debug.Log("********** iOS OpenIAB plugin initialized **********");
+		#endif
 #elif UNITY_WP8
             _billing = new OpenIAB_WP8();
             Debug.Log("********** WP8 OpenIAB plugin initialized **********");
@@ -140,6 +144,14 @@ namespace OnePF
         {
             _billing.restoreTransactions();
         }
+
+        /**
+         * Refresh iOS recipt
+         */ 
+		public static void RefreshReceipt()
+		{
+			_billing.refreshReceipt();
+		}
 
         /**
          * Is verbose logging enabled

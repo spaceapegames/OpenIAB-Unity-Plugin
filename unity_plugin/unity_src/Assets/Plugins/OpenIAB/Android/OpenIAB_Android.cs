@@ -239,6 +239,10 @@ namespace OnePF
         {
         }
 
+		public void refreshReceipt()
+		{
+		}
+
         public bool isDebugLog()
         {
             if (IsDevice())

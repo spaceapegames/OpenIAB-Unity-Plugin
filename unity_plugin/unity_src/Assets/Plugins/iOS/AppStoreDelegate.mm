@@ -17,20 +17,20 @@
 #import "AppStoreDelegate.h"
 #import <StoreKit/StoreKit.h>
 
-/** 
+/**
  * Helper method to create C string copy
  * By default mono string marshaler creates .Net string for returned UTF-8 C string
  * and calls free for returned value, thus returned strings should be allocated on heap
  * @param string original C string
  */
-char* MakeStringCopy(const char* string)
+char* ASMakeStringCopy(const char* string)
 {
-	if (string == NULL)
-		return NULL;
-	
-	char* res = (char*)malloc(strlen(string) + 1);
-	strcpy(res, string);
-	return res;
+    if (string == NULL)
+        return NULL;
+    
+    char* res = (char*)malloc(strlen(string) + 1);
+    strcpy(res, string);
+    return res;
 }
 
 /**
@@ -63,6 +63,8 @@ NSMutableArray* m_skuMap;
 NSMutableArray* m_skuMapSerializable;
 
 NSMutableArray* transactions;
+
+static AppStoreDelegate* _instance = nil;
 
 - (void)storePurchase:(SKPaymentTransaction *)transaction
 {
@@ -107,11 +109,15 @@ NSMutableArray* transactions;
 
 + (AppStoreDelegate*)instance
 {
-	static AppStoreDelegate* instance = nil;
-	if (!instance)
-		instance = [[AppStoreDelegate alloc] init];
+    if (!_instance)
+        _instance = [[AppStoreDelegate alloc] init];
     
-    return instance;
+    return _instance;
+}
+
++ (bool)hasInstance
+{
+    return _instance != nil;
 }
 
 - (id)init
@@ -124,13 +130,9 @@ NSMutableArray* transactions;
 - (void)dealloc
 {
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
-    [m_skuMap release];
-    [m_skuMapSerializable release];
-    [m_skus release];
     m_skus = nil;
     m_skuMap = nil;
     m_skuMapSerializable = nil;
-    [super dealloc];
 }
 
 
@@ -138,10 +140,10 @@ NSMutableArray* transactions;
 
 - (void)requestSKUs:(NSSet*)skus
 {
-    m_skus = [skus retain];
+    m_skus = skus;
     SKProductsRequest *request = [[SKProductsRequest alloc] initWithProductIdentifiers:skus];
-	request.delegate = self;
-	[request start];
+    request.delegate = self;
+    [request start];
 }
 
 // Setup handler
@@ -185,12 +187,12 @@ NSMutableArray* transactions;
         [m_skuMapSerializable addObject:serEntry];
     }
     
-    UnitySendMessage(EventHandler, "OnBillingSupported", MakeStringCopy(""));
+    UnitySendMessage(EventHandler, "OnBillingSupported", ASMakeStringCopy(""));
 }
 
 - (void)request:(SKRequest*)request didFailWithError:(NSError*)error
 {
-    UnitySendMessage(EventHandler, "OnBillingNotSupported", MakeStringCopy([[error localizedDescription] UTF8String]));
+    UnitySendMessage(EventHandler, "OnBillingNotSupported", ASMakeStringCopy([[error localizedDescription] UTF8String]));
 }
 
 
@@ -216,6 +218,7 @@ NSMutableArray* transactions;
     }
     else {
         NSLog(@"Couldn't find a product to purchase. Will be skipped.");
+        UnitySendMessage(EventHandler, "OnPurchaseFailed", ASMakeStringCopy("Couldn't find a product to purchase. Will be skipped."));
     }
 }
 
@@ -223,33 +226,36 @@ NSMutableArray* transactions;
 {
     NSMutableDictionary* inventory = [[NSMutableDictionary alloc] init];
     NSMutableArray* purchaseMap = [[NSMutableArray alloc] init];
-    NSUserDefaults* standardUserDefaults = [NSUserDefaults standardUserDefaults];
-    if (!standardUserDefaults)
-        NSLog(@"Couldn't access purchase storage. Purchase map won't be available.");
-    else
-        for (NSString* sku in m_skus)
-            if ([standardUserDefaults boolForKey:sku])
-            {
-                // TODO: Probably store all purchase information. Not only sku
-                // Setup purchase
-                NSDictionary* purchase = [NSDictionary dictionaryWithObjectsAndKeys:
-                                          @"product", @"itemType",
-                                          @"", @"orderId",
-                                          @"", @"packageName",
-                                          sku, @"sku",
-                                          [NSNumber numberWithLong:0], @"purchaseTime",
-                                          // TODO: copy constants from Android if ever needed
-                                          [NSNumber numberWithInt:0], @"purchaseState",
-                                          @"", @"developerPayload",
-                                          @"", @"token",
-                                          @"", @"originalJson",
-                                          @"", @"signature",
-                                          @"", @"appstoreName",
-                                          nil];
-                
-                NSArray* entry = [NSArray arrayWithObjects:sku, purchase, nil];
-                [purchaseMap addObject:entry];
-            }
+    
+    // This information is useless to us - we can't validate any of these purchases as there is no stored receipt
+    // We use SpaceApe_PaymentQueue to get unconsumed transactions instead
+    /*NSUserDefaults* standardUserDefaults = [NSUserDefaults standardUserDefaults];
+     if (!standardUserDefaults)
+     NSLog(@"Couldn't access purchase storage. Purchase map won't be available.");
+     else
+     for (NSString* sku in m_skus)
+     if ([standardUserDefaults boolForKey:sku])
+     {
+     // TODO: Probably store all purchase information. Not only sku
+     // Setup purchase
+     NSDictionary* purchase = [NSDictionary dictionaryWithObjectsAndKeys:
+     @"product", @"itemType",
+     @"", @"orderId",
+     @"", @"packageName",
+     sku, @"sku",
+     [NSNumber numberWithLong:0], @"purchaseTime",
+     // TODO: copy constants from Android if ever needed
+     [NSNumber numberWithInt:0], @"purchaseState",
+     @"", @"developerPayload",
+     @"", @"token",
+     @"", @"originalJson",
+     @"", @"signature",
+     @"", @"appstoreName",
+     nil];
+     
+     NSArray* entry = [NSArray arrayWithObjects:sku, purchase, nil];
+     [purchaseMap addObject:entry];
+     }*/
     
     [inventory setObject:purchaseMap forKey:@"purchaseMap"];
     [inventory setObject:m_skuMapSerializable forKey:@"skuMap"];
@@ -257,7 +263,7 @@ NSMutableArray* transactions;
     NSError* error = nil;
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:inventory options:kNilOptions error:&error];
     NSString* message = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-	UnitySendMessage(EventHandler, "OnQueryInventorySucceeded", MakeStringCopy([message UTF8String]));
+    UnitySendMessage(EventHandler, "OnQueryInventorySucceeded", ASMakeStringCopy([message UTF8String]));
 }
 
 - (void)restorePurchases
@@ -265,6 +271,23 @@ NSMutableArray* transactions;
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
 }
 
+
+- (void)refreshReceipt
+{
+    NSLog(@"refreshReceipt.");
+
+    SKReceiptRefreshRequest *request = [[SKReceiptRefreshRequest alloc] initWithReceiptProperties:nil];
+    request.delegate = self;
+    [request start];
+}
+
+- (void)requestDidFinish:(SKRequest *)request
+{
+    NSLog(@"refresh request finished");
+    if ([request isKindOfClass:[SKReceiptRefreshRequest class]]) {
+            NSLog(@"Got a new receipt...");
+    }
+}
 
 // Transactions handler
 
@@ -275,13 +298,16 @@ NSMutableArray* transactions;
 
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
 {
-	for (SKPaymentTransaction *transaction in transactions)
-	{
-		switch (transaction.transactionState)
-		{
-			case SKPaymentTransactionStateFailed:
+    for (SKPaymentTransaction *transaction in transactions)
+    {
+        switch (transaction.transactionState)
+        {
+            case SKPaymentTransactionStateFailed:
                 if (transaction.error.code == SKErrorPaymentCancelled)
-                    UnitySendMessage(EventHandler, "OnPurchaseFailed", MakeStringCopy("Transaction cancelled"));
+				{
+					NSString* errorMessage = [NSString stringWithFormat:@"%d|Transaction cancelled", transaction.error.code];
+					UnitySendMessage(EventHandler, "OnPurchaseFailed", ASMakeStringCopy([errorMessage UTF8String]));
+				}
                 else {
                     NSError* error = transaction.error;
                     const char* errorStr = NULL;
@@ -291,15 +317,16 @@ NSMutableArray* transactions;
                     else {
                         errorStr = "Unknown error";
                     }
-                    UnitySendMessage(EventHandler, "OnPurchaseFailed", MakeStringCopy(errorStr));
+					NSString* errorMessage = [NSString stringWithFormat:@"%d|%s", transaction.error.code, errorStr];
+					UnitySendMessage(EventHandler, "OnPurchaseFailed", ASMakeStringCopy([errorMessage UTF8String]));
                 }
                 [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-				break;
+                break;
                 
             case SKPaymentTransactionStateRestored:
-			case SKPaymentTransactionStatePurchased:
+            case SKPaymentTransactionStatePurchased:
                 [self storePurchase:transaction];
-
+                
                 // As of iOS7 transaction.transactionReceipt is deprecated.
                 // https://developer.apple.com/LIBRARY/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateRemotely.html#//apple_ref/doc/uid/TP40010573-CH104-SW1
                 NSData* receipt = nil;
@@ -312,31 +339,31 @@ NSMutableArray* transactions;
                 }
                 
                 NSDictionary* purchaseSuccessMessage = [NSDictionary dictionaryWithObjectsAndKeys:
-                    @"product", @"itemType",
-                    transaction.transactionIdentifier, @"orderId",
-                    @"", @"packageName",
-                    transaction.payment.productIdentifier, @"sku",
-                    [NSNumber numberWithLong:0], @"purchaseTime",
-                    [NSNumber numberWithLong:0], @"purchaseState",
-                    @"", @"developerPayload",
-                    [receipt base64EncodedStringWithOptions:0], @"token",
-                    @"", @"originalJson",
-                    @"", @"signature",
-                    @"", @"appstoreName",
-                    nil];
+                                                        @"product", @"itemType",
+                                                        transaction.transactionIdentifier, @"orderId",
+                                                        @"", @"packageName",
+                                                        transaction.payment.productIdentifier, @"sku",
+                                                        [NSNumber numberWithLong:0], @"purchaseTime",
+                                                        [NSNumber numberWithLong:0], @"purchaseState",
+                                                        @"", @"developerPayload",
+                                                        [receipt base64EncodedStringWithOptions:0], @"token",
+                                                        @"", @"originalJson",
+                                                        @"", @"signature",
+                                                        @"", @"appstoreName",
+                                                        nil];
                 
                 NSError* error = nil;
                 NSData* jsonData = [NSJSONSerialization dataWithJSONObject:purchaseSuccessMessage options:kNilOptions error:&error];
                 NSString* message = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-                UnitySendMessage(EventHandler, "OnPurchaseSucceeded", MakeStringCopy([message UTF8String]));
+                UnitySendMessage(EventHandler, "OnPurchaseSucceeded", ASMakeStringCopy([message UTF8String]));
                 break;
-		}
-	}
+        }
+    }
 }
 
 - (void)paymentQueue:(SKPaymentQueue*)queue restoreCompletedTransactionsFailedWithError:(NSError*)error
 {
-	UnitySendMessage(EventHandler, "OnRestoreFailed", MakeStringCopy([[error localizedDescription] UTF8String]));
+    UnitySendMessage(EventHandler, "OnRestoreFailed", ASMakeStringCopy([[error localizedDescription] UTF8String]));
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue*)queue
