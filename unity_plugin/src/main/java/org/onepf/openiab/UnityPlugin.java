@@ -357,11 +357,25 @@ public class UnityPlugin {
      */
     private String skuDetailsToJson(SkuDetails skuDetails) throws JSONException {
         String priceValueNotFormatted = "";
+        String priceCurrencyCode = "";
+
+        if (skuDetails.getJson() != null)
+        {
+            try {
+                JSONObject o = new JSONObject(skuDetails.getJson());
+                priceCurrencyCode = o.optString("price_currency_code");
+                priceValueNotFormatted = o.optString("price_amount_micros");
+            }
+            catch (Exception ex) {
+            }
+        }
+
         try {
-            int priceMicros = Integer.parseInt(skuDetails.getPriceMicroUnits());
+            int priceMicros = Integer.parseInt(priceValueNotFormatted);
             float priceFloat = (float)priceMicros / 1000000.0f;
             priceValueNotFormatted = Float.toString(priceFloat);
-        } catch (Exception ex) {            
+        }
+        catch (Exception ex) {
         }
         
         return new JSONStringer().object()
@@ -371,7 +385,7 @@ public class UnityPlugin {
                 .key("price").value(skuDetails.getPrice())
                 .key("title").value(skuDetails.getTitle())
                 .key("description").value(skuDetails.getDescription())
-                .key("currencyCode").value(skuDetails.getPriceCurrencyCode())
+                .key("currencyCode").value(priceCurrencyCode)
                 .key("priceValue").value(priceValueNotFormatted)
                 .key("storeCountry").value("")
                 .key("json").value(skuDetails.getJson())
