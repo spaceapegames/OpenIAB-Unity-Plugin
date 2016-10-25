@@ -1,0 +1,48 @@
+IF YOU ARE CHANGING OPENIAB (the submodule)
+- make you changes in the submodule
+- change to the ./OpenIAB folder
+- build OpenIAB with ./gradlew buildNeeded
+
+THIS WILL THEN COMPILE YOUR SOURCE - the results are hidden in a sample folder but
+this doesn't matter cause you're NOW going to have to change the gradle build of
+the OpenIAB-Unity-Plugin project. If you dont do this then it will just pull the
+OpenIAB jar file from the internet and ignore your work :(
+
+- change ./unity_plugin/build.gradle
+Make dependencies look like:
+
+dependencies {
+    compile fileTree(dir: 'libs', include: '*.jar')
+    //compile "org.onepf:openiab:$openIabVersion"
+    compile fileTree(dir: '../OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/libs', include: '*.jar')
+    compile fileTree(dir: '../OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/', include: '*.jar')
+}
+
+This will build it with your version (its in 2 jars - NO IDEA WHY)
+You also need to change another section:
+
+def openIabJar = project.configurations.compile.find {
+    it.name.startsWith "openiab-${openIabVersion}"
+}
+
+//assert openIabJar != null
+ant.unzip(src: '/Users/ben/Code/OpenIAB-Unity-Plugin/OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/classes.jar', dest: outAbsoluteDir)
+ant.unzip(src: '/Users/ben/Code/OpenIAB-Unity-Plugin/OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/libs/in-app-purchasing-1.0.3.jar', dest: outAbsoluteDir)
+//ant.unzip(src: openIabJar.absolutePath, dest: outAbsoluteDir)
+
+//    Copy compiled unity-plugin java source
+copy {
+    from "${project(':Unity Plugin').projectDir.absolutePath}" +
+            "${sep}build${sep}intermediates${sep}classes${sep}release"
+    into outAbsoluteDir
+    include '**/*.class'
+}
+
+This will copy the contents of what you've built into the resulting magical OpenIAB-plugin.jar
+
+NOW BUILD THE PLUGIN
+- ./gradlew buildPlugin
+
+The OpenIAB-plugin.jar will now exist in ./unity_plugin/unity_src/Assets/Plugins/Android/OpenIAB-plugin.jar - PUT THIS IN YOUR PROJECT.
+
+KTHANKSBYE.
