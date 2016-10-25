@@ -25,7 +25,9 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
-    compile "org.onepf:openiab:$openIabVersion"
+    //compile "org.onepf:openiab:$openIabVersion"
+    compile fileTree(dir: '../OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/libs', include: '*.jar')
+    compile fileTree(dir: '../OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/', include: '*.jar')
 }
 
 task buildPlugin(dependsOn: 'assembleRelease') << {
@@ -39,8 +41,10 @@ task buildPlugin(dependsOn: 'assembleRelease') << {
         it.name.startsWith "openiab-${openIabVersion}"
     }
 
-    assert openIabJar != null
-    ant.unzip(src: openIabJar.absolutePath, dest: outAbsoluteDir)
+    //assert openIabJar != null
+    ant.unzip(src: '/Users/ben/Code/OpenIAB-Unity-Plugin/OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/classes.jar', dest: outAbsoluteDir)
+    ant.unzip(src: '/Users/ben/Code/OpenIAB-Unity-Plugin/OpenIAB/samples/trivialdrive/build/intermediates/exploded-aar/OpenIAB/OpenIab Library/unspecified/libs/in-app-purchasing-1.0.3.jar', dest: outAbsoluteDir)
+    //ant.unzip(src: openIabJar.absolutePath, dest: outAbsoluteDir)
 
 //    Copy compiled unity-plugin java source
     copy {
